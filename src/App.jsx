@@ -51,6 +51,7 @@ const carregarBase =
           "anac_db_time"
         );
 
+      // usa cache por 24h
       if (
         cache &&
         cacheTime
@@ -78,17 +79,77 @@ const carregarBase =
 
           setBase(parsed);
 
+          console.log(
+            "Cache carregado"
+          );
+
           setLoading(false);
 
           return;
         }
       }
 
+      // baixa da ANAC
       const response =
         await fetch(
           "https://api.allorigins.win/raw?url=https://sistemas.anac.gov.br/dadosabertos/Aeronaves/RAB/dados_aeronaves.json"
         );
 
+      const data =
+        await response.json();
+
+      let lista = [];
+
+      if (
+        Array.isArray(data)
+      ) {
+
+        lista = data;
+
+      } else if (
+        Array.isArray(
+          data.data
+        )
+      ) {
+
+        lista = data.data;
+
+      } else {
+
+        lista =
+          Object.values(data);
+      }
+
+      // salva cache
+      localStorage.setItem(
+        "anac_db",
+        JSON.stringify(lista)
+      );
+
+      localStorage.setItem(
+        "anac_db_time",
+        Date.now()
+      );
+
+      setBase(lista);
+
+      console.log(
+        "Base ANAC carregada"
+      );
+
+      setLoading(false);
+
+    } catch (err) {
+
+      console.error(err);
+
+      setErro(
+        "Erro ao carregar ANAC"
+      );
+
+      setLoading(false);
+    }
+  };
       const data =
         await response.json();
 
