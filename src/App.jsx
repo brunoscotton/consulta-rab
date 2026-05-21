@@ -34,10 +34,10 @@ export default function App() {
     try {
       setLoading(true);
 
-      const response = await fetch(
-        API_URL
-      );
-
+     const response =
+  await axios.get(
+    "https://api.allorigins.win/raw?url=https://sistemas.anac.gov.br/dadosabertos/Aeronaves/RAB/dados_aeronaves.json"
+  );
       if (!response.ok) {
         throw new Error(
           "Erro ao carregar JSON"
