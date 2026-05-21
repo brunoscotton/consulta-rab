@@ -1,14 +1,11 @@
-
-
 import React, {
   useEffect,
   useMemo,
   useState,
 } from "react";
 
-import axios from "axios";
-
 export default function App() {
+
   const [prefixo, setPrefixo] =
     useState("");
 
@@ -27,327 +24,180 @@ export default function App() {
   const [showJson, setShowJson] =
     useState(false);
 
-  const API_URL =
-    "/api-anac/dadosabertos/Aeronaves/RAB/dados_aeronaves.json";
-
   useEffect(() => {
     carregarBase();
   }, []);
 
-const carregarBase =
-  async () => {
+  const carregarBase =
+    async () => {
 
-    try {
+      try {
 
-      setLoading(true);
+        setLoading(true);
 
-      const cache =
-        localStorage.getItem(
-          "anac_db"
-        );
+        // cache
+        const cache =
+          localStorage.getItem(
+            "anac_db"
+          );
 
-      const cacheTime =
-        localStorage.getItem(
-          "anac_db_time"
-        );
+        const cacheTime =
+          localStorage.getItem(
+            "anac_db_time"
+          );
 
-      // usa cache por 24h
-      if (
-        cache &&
-        cacheTime
-      ) {
-
-        const agora =
-          Date.now();
-
-        const diff =
-          agora -
-          Number(cacheTime);
-
+        // 24 horas
         const limite =
           1000 *
           60 *
           60 *
           24;
 
+        // usa cache
         if (
-          diff < limite
+          cache &&
+          cacheTime
         ) {
 
-          const parsed =
-            JSON.parse(cache);
+          const agora =
+            Date.now();
 
-          setBase(parsed);
+          const diff =
+            agora -
+            Number(cacheTime);
 
-          console.log(
-            "Cache carregado"
+          if (
+            diff < limite
+          ) {
+
+            const parsed =
+              JSON.parse(cache);
+
+            setBase(parsed);
+
+            console.log(
+              "Cache carregado"
+            );
+
+            setLoading(false);
+
+            return;
+          }
+        }
+
+        console.log(
+          "Baixando base ANAC..."
+        );
+
+        const response =
+          await fetch(
+            "https://api.allorigins.win/raw?url=https://sistemas.anac.gov.br/dadosabertos/Aeronaves/RAB/dados_aeronaves.json"
           );
 
-          setLoading(false);
+        if (!response.ok) {
 
-          return;
+          throw new Error(
+            "Erro ao baixar base"
+          );
         }
-      }
 
-      // baixa da ANAC
-      const response =
-        await fetch(
-          "https://api.allorigins.win/raw?url=https://sistemas.anac.gov.br/dadosabertos/Aeronaves/RAB/dados_aeronaves.json"
-        );
+        const json =
+          await response.json();
 
-      const data =
-        await response.json();
+        let lista = [];
 
-      let lista = [];
+        if (
+          Array.isArray(json)
+        ) {
 
-      if (
-        Array.isArray(data)
-      ) {
+          lista = json;
 
-        lista = data;
+        } else if (
+          Array.isArray(
+            json.data
+          )
+        ) {
 
-      } else if (
-        Array.isArray(
-          data.data
-        )
-      ) {
+          lista = json.data;
 
-        lista = data.data;
+        } else {
 
-      } else {
-
-        lista =
-          Object.values(data);
-      }
-
-      // salva cache
-      localStorage.setItem(
-        "anac_db",
-        JSON.stringify(lista)
-      );
-
-      localStorage.setItem(
-        "anac_db_time",
-        Date.now()
-      );
-
-      setBase(lista);
-
-      console.log(
-        "Base ANAC carregada"
-      );
-
-      setLoading(false);
-
-    } catch (err) {
-
-      console.error(err);
-
-      setErro(
-        "Erro ao carregar ANAC"
-      );
-
-      setLoading(false);
-    }
-  };
-      const data =
-        await response.json();
-
-      let lista = [];
-
-      if (
-        Array.isArray(data)
-      ) {
-        lista = data;
-      } else if (
-        Array.isArray(
-          data.data
-        )
-      ) {
-        lista = data.data;
-      } else {
-        lista =
-          Object.values(data);
-      }
-
-      localStorage.setItem(
-        "anac_db",
-        JSON.stringify(lista)
-      );
-
-      localStorage.setItem(
-        "anac_db_time",
-        Date.now()
-      );
-
-      setBase(lista);
-
-      setLoading(false);
-
-    } catch (err) {
-
-      console.error(err);
-
-      setErro(
-        "Erro ao carregar ANAC"
-      );
-
-      setLoading(false);
-    }
-  };
-
-  console.log(
-    "Cache expirado"
-  );
-}
-
-      // baixa da internet
-      const response =
-        await fetch(
-          "https://api.allorigins.win/raw?url=https://sistemas.anac.gov.br/dadosabertos/Aeronaves/RAB/dados_aeronaves.json"
-        );
-
-      const data =
-        await response.json();
-
-      let lista = [];
-
-      if (
-        Array.isArray(data)
-      ) {
-        lista = data;
-      } else if (
-        Array.isArray(
-          data.data
-        )
-      ) {
-        lista = data.data;
-      } else {
-        lista =
-          Object.values(data);
-      }
-
-      // salva cache
-      localStorage.setItem(
-        "anac_db",
-        JSON.stringify(lista)
-      );
-
-localStorage.setItem(
-  "anac_db_time",
-  Date.now()
-);
-
-      setBase(lista);
-
-      console.log(
-        "Base baixada da ANAC"
-      );
-
-      setLoading(false);
-
-    } catch (err) {
-
-      console.error(err);
-
-      setErro(
-        "Erro ao carregar ANAC"
-      );
-
-      setLoading(false);
-    }
-  };
-      if (!response.ok) {
-        throw new Error(
-          "Erro ao carregar JSON"
-        );
-      }
-
-      const json =
-        await response.json();
-
-      console.log(
-        "JSON recebido:",
-        json
-      );
-console.log(
-  "Primeiro item completo:",
-  JSON.stringify(
-    Array.isArray(json)
-      ? json[0]
-      : json.data?.[0] ||
-          json.features?.[0],
-    null,
-    2
-  )
-);
-
-      let lista = [];
-
-      if (Array.isArray(json)) {
-        lista = json;
-      } else if (
-        Array.isArray(json.data)
-      ) {
-        lista = json.data;
-      } else if (
-        Array.isArray(
-          json.features
-        )
-      ) {
-        lista = json.features;
-      } else {
-        throw new Error(
-          "Estrutura JSON desconhecida"
-        );
-      }
-
-      const mapa = {};
-
-      lista.forEach((item) => {
-        const marca =
-          item.MARCAS
-            ?.trim()
-            .toUpperCase();
-
-        if (marca) {
-          mapa[marca] = item;
+          throw new Error(
+            "Estrutura inválida"
+          );
         }
-      });
 
-      console.log(
-        "Aeronaves carregadas:",
-        Object.keys(mapa).length
-      );
+        // indexa por prefixo
+        const mapa = {};
 
-      console.log(
-        "Primeiro item:",
-        lista[0]
-      );
+        lista.forEach(
+          (item) => {
 
-      setBase(mapa);
+            const marca =
+              String(
+                item.MARCA || ""
+              )
+                .replace("-", "")
+                .trim()
+                .toUpperCase();
 
-      setLoading(false);
+            if (marca) {
 
-    } catch (err) {
-      console.error(err);
+              mapa[marca] =
+                item;
+            }
+          }
+        );
 
-      setErro(err.message);
+        // salva cache
+        localStorage.setItem(
+          "anac_db",
+          JSON.stringify(mapa)
+        );
 
-      setLoading(false);
-    }
-  };
+        localStorage.setItem(
+          "anac_db_time",
+          Date.now()
+        );
+
+        setBase(mapa);
+
+        console.log(
+          "Base carregada:",
+          Object.keys(mapa)
+            .length
+        );
+
+        setLoading(false);
+
+      } catch (err) {
+
+        console.error(err);
+
+        setErro(
+          err.message
+        );
+
+        setLoading(false);
+      }
+    };
 
   const consultar = () => {
+
     try {
+
       setErro("");
+
       setData(null);
 
-      const busca = prefixo
-        .trim()
-        .toUpperCase();
+      const busca =
+        prefixo
+          .replace("-", "")
+          .trim()
+          .toUpperCase();
 
       if (!busca) {
+
         throw new Error(
           "Digite um prefixo"
         );
@@ -357,6 +207,7 @@ console.log(
         base[busca];
 
       if (!aeronave) {
+
         throw new Error(
           "Aeronave não encontrada"
         );
@@ -365,50 +216,73 @@ console.log(
       setData(aeronave);
 
     } catch (err) {
-      setErro(err.message);
+
+      setErro(
+        err.message
+      );
     }
   };
 
-  const normalizePrefix = (
-    value
-  ) => {
-    let clean = value
-      .toUpperCase()
-      .replace(/[^A-Z0-9]/g, "");
+  const normalizePrefix =
+    (value) => {
 
-    if (clean.length > 2) {
-      clean =
-        clean.slice(0, 2) +
-        "-" +
-        clean.slice(2);
-    }
+      let clean =
+        value
+          .toUpperCase()
+          .replace(
+            /[^A-Z0-9]/g,
+            ""
+          );
 
-    return clean.slice(0, 6);
-  };
+      if (
+        clean.length > 2
+      ) {
 
-  const filledFields = useMemo(() => {
-    if (!data) return 0;
+        clean =
+          clean.slice(0, 2) +
+          "-" +
+          clean.slice(2);
+      }
 
-    return Object.values(data)
-      .filter(
+      return clean.slice(0, 6);
+    };
+
+  const filledFields =
+    useMemo(() => {
+
+      if (!data)
+        return 0;
+
+      return Object.values(
+        data
+      ).filter(
         (v) =>
           v !== null &&
           v !== undefined &&
           v !== ""
-      )
-      .length;
-  }, [data]);
+      ).length;
 
-  const copyJson = async () => {
-    await navigator.clipboard.writeText(
-      JSON.stringify(data, null, 2)
-    );
+    }, [data]);
 
-    alert("JSON copiado");
-  };
+  const copyJson =
+    async () => {
+
+      await navigator.clipboard.writeText(
+        JSON.stringify(
+          data,
+          null,
+          2
+        )
+      );
+
+      alert(
+        "JSON copiado"
+      );
+    };
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white p-6">
+
       <div className="max-w-7xl mx-auto">
 
         <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
@@ -416,6 +290,7 @@ console.log(
           <div className="flex flex-col lg:flex-row justify-between items-center gap-4">
 
             <div>
+
               <h1 className="text-3xl font-bold">
                 Consulta RAB
               </h1>
@@ -425,11 +300,15 @@ console.log(
               </p>
 
               <div className="mt-2 text-sm">
+
                 {loading ? (
+
                   <span className="text-yellow-400">
                     Carregando base...
                   </span>
+
                 ) : (
+
                   <span className="text-green-400">
                     Base carregada (
                     {
@@ -438,15 +317,18 @@ console.log(
                     }{" "}
                     aeronaves)
                   </span>
+
                 )}
+
               </div>
+
             </div>
 
             <div className="flex gap-3">
 
               <input
                 type="text"
-                placeholder="PT-JTV"
+                placeholder="PP-ABC"
                 value={prefixo}
                 onChange={(e) =>
                   setPrefixo(
@@ -471,32 +353,38 @@ console.log(
           </div>
 
           {erro && (
+
             <div className="mt-6 bg-red-500/10 border border-red-500/30 text-red-300 px-4 py-3 rounded-xl">
               {erro}
             </div>
+
           )}
 
           {data && (
             <>
+
               <div className="mt-8 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
 
                 {Object.entries(data)
                   .slice(0, 8)
                   .map(
                     ([key, value]) => (
+
                       <Card
                         key={key}
                         title={key}
                         value={value}
                       />
+
                     )
                   )}
 
               </div>
 
-              <div className="mt-6 flex gap-4">
+              <div className="mt-6 flex gap-4 flex-wrap">
 
                 <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
+
                   <div className="text-zinc-400 text-sm">
                     Campos preenchidos
                   </div>
@@ -504,6 +392,7 @@ console.log(
                   <div className="text-4xl font-bold mt-2">
                     {filledFields}
                   </div>
+
                 </div>
 
                 <button
@@ -538,20 +427,26 @@ console.log(
 
                   {Object.entries(data).map(
                     ([key, value]) => (
+
                       <div
                         key={key}
                         className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4"
                       >
+
                         <div className="text-zinc-400 text-sm mb-2">
                           {key}
                         </div>
 
-                        <div className="break-words">
+                        <div className="break-words text-sm">
+
                           {String(
                             value
                           ) || "Não informado"}
+
                         </div>
+
                       </div>
+
                     )
                   )}
 
@@ -560,6 +455,7 @@ console.log(
               </div>
 
               {showJson && (
+
                 <div className="mt-8">
 
                   <pre className="bg-black border border-zinc-800 rounded-2xl p-6 overflow-auto text-green-400 text-sm">
@@ -571,13 +467,16 @@ console.log(
                   </pre>
 
                 </div>
+
               )}
 
             </>
           )}
 
         </div>
+
       </div>
+
     </div>
   );
 }
@@ -586,7 +485,9 @@ function Card({
   title,
   value,
 }) {
+
   return (
+
     <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
 
       <div className="text-sm text-zinc-400">
@@ -594,8 +495,10 @@ function Card({
       </div>
 
       <div className="mt-2 text-lg font-semibold break-words">
+
         {String(value) ||
           "Não informado"}
+
       </div>
 
     </div>
