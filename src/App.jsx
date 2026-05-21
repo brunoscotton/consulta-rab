@@ -90,10 +90,9 @@ export default function App() {
         );
 
         const response =
-          await fetch(
-            "https://api.allorigins.win/raw?url=https://sistemas.anac.gov.br/dadosabertos/Aeronaves/RAB/dados_aeronaves.json"
-          );
-
+  await fetch(
+    "https://corsproxy.io/?https://sistemas.anac.gov.br/dadosabertos/Aeronaves/RAB/dados_aeronaves.json"
+  );
         if (!response.ok) {
 
           throw new Error(
