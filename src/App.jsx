@@ -34,59 +34,106 @@ export default function App() {
     carregarBase();
   }, []);
 
-  const carregarBase =
+const carregarBase =
   async () => {
 
     try {
 
       setLoading(true);
 
-      // tenta carregar cache
       const cache =
         localStorage.getItem(
           "anac_db"
         );
-const cacheTime =
-  localStorage.getItem(
-    "anac_db_time"
-  );
+
+      const cacheTime =
+        localStorage.getItem(
+          "anac_db_time"
+        );
 
       if (
-  cache &&
-  cacheTime
-) {
+        cache &&
+        cacheTime
+      ) {
 
-  const agora =
-    Date.now();
+        const agora =
+          Date.now();
 
-  const diff =
-    agora -
-    Number(cacheTime);
+        const diff =
+          agora -
+          Number(cacheTime);
 
-  // 24 horas
-  const limite =
-    1000 *
-    60 *
-    60 *
-    24;
+        const limite =
+          1000 *
+          60 *
+          60 *
+          24;
 
-  if (
-    diff < limite
-  ) {
+        if (
+          diff < limite
+        ) {
 
-    const parsed =
-      JSON.parse(cache);
+          const parsed =
+            JSON.parse(cache);
 
-    setBase(parsed);
+          setBase(parsed);
 
-    console.log(
-      "Base carregada do cache"
-    );
+          setLoading(false);
 
-    setLoading(false);
+          return;
+        }
+      }
 
-    return;
-  }
+      const response =
+        await fetch(
+          "https://api.allorigins.win/raw?url=https://sistemas.anac.gov.br/dadosabertos/Aeronaves/RAB/dados_aeronaves.json"
+        );
+
+      const data =
+        await response.json();
+
+      let lista = [];
+
+      if (
+        Array.isArray(data)
+      ) {
+        lista = data;
+      } else if (
+        Array.isArray(
+          data.data
+        )
+      ) {
+        lista = data.data;
+      } else {
+        lista =
+          Object.values(data);
+      }
+
+      localStorage.setItem(
+        "anac_db",
+        JSON.stringify(lista)
+      );
+
+      localStorage.setItem(
+        "anac_db_time",
+        Date.now()
+      );
+
+      setBase(lista);
+
+      setLoading(false);
+
+    } catch (err) {
+
+      console.error(err);
+
+      setErro(
+        "Erro ao carregar ANAC"
+      );
+
+      setLoading(false);
+    }
+  };
 
   console.log(
     "Cache expirado"
