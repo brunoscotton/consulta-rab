@@ -34,14 +34,121 @@ export default function App() {
     carregarBase();
   }, []);
 
-  const carregarBase = async () => {
+  const carregarBase =
+  async () => {
+
     try {
+
       setLoading(true);
 
-     const response =
-  await axios.get(
-    "https://api.allorigins.win/raw?url=https://sistemas.anac.gov.br/dadosabertos/Aeronaves/RAB/dados_aeronaves.json"
+      // tenta carregar cache
+      const cache =
+        localStorage.getItem(
+          "anac_db"
+        );
+const cacheTime =
+  localStorage.getItem(
+    "anac_db_time"
   );
+
+      if (
+  cache &&
+  cacheTime
+) {
+
+  const agora =
+    Date.now();
+
+  const diff =
+    agora -
+    Number(cacheTime);
+
+  // 24 horas
+  const limite =
+    1000 *
+    60 *
+    60 *
+    24;
+
+  if (
+    diff < limite
+  ) {
+
+    const parsed =
+      JSON.parse(cache);
+
+    setBase(parsed);
+
+    console.log(
+      "Base carregada do cache"
+    );
+
+    setLoading(false);
+
+    return;
+  }
+
+  console.log(
+    "Cache expirado"
+  );
+}
+
+      // baixa da internet
+      const response =
+        await fetch(
+          "https://api.allorigins.win/raw?url=https://sistemas.anac.gov.br/dadosabertos/Aeronaves/RAB/dados_aeronaves.json"
+        );
+
+      const data =
+        await response.json();
+
+      let lista = [];
+
+      if (
+        Array.isArray(data)
+      ) {
+        lista = data;
+      } else if (
+        Array.isArray(
+          data.data
+        )
+      ) {
+        lista = data.data;
+      } else {
+        lista =
+          Object.values(data);
+      }
+
+      // salva cache
+      localStorage.setItem(
+        "anac_db",
+        JSON.stringify(lista)
+      );
+
+localStorage.setItem(
+  "anac_db_time",
+  Date.now()
+);
+
+      setBase(lista);
+
+      console.log(
+        "Base baixada da ANAC"
+      );
+
+      setLoading(false);
+
+    } catch (err) {
+
+      console.error(err);
+
+      setErro(
+        "Erro ao carregar ANAC"
+      );
+
+      setLoading(false);
+    }
+  };
       if (!response.ok) {
         throw new Error(
           "Erro ao carregar JSON"
