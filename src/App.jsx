@@ -38,53 +38,7 @@ export default function App() {
         setErro("");
 
         // =========================
-        // CACHE
-        // =========================
-
-        const cache =
-          localStorage.getItem(
-            "anac_db"
-          );
-
-        const cacheTime =
-          localStorage.getItem(
-            "anac_db_time"
-          );
-
-        const limite24h =
-          1000 *
-          60 *
-          60 *
-          24;
-
-        if (
-          cache &&
-          cacheTime
-        ) {
-
-          const diff =
-            Date.now() -
-            Number(cacheTime);
-
-          // usa cache se tiver menos de 24h
-          if (
-            diff < limite24h
-          ) {
-
-            const parsed =
-              JSON.parse(cache);
-
-            setBase(parsed);
-
-            console.log(
-              "Base carregada do cache"
-            );
-
-            setLoading(false);
-
-            return;
-          }
-        }
+       
 
         // =========================
         // CARREGA JSON LOCAL
@@ -173,16 +127,7 @@ export default function App() {
         // SALVA CACHE
         // =========================
 
-        localStorage.setItem(
-          "anac_db",
-          JSON.stringify(mapa)
-        );
-
-        localStorage.setItem(
-          "anac_db_time",
-          Date.now()
-        );
-
+       
         setBase(mapa);
 
         setLoading(false);
