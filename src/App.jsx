@@ -324,7 +324,150 @@ export default function App() {
 
     return text;
   };
+
+const renderValue =
+  (value) => {
+
+    if (
+      value === null ||
+      value === undefined ||
+      value === ""
+    ) {
+
+      return (
+        <span>
+          Não informado
+        </span>
+      );
+    }
+
+    let text =
+      String(value);
+
+    // tenta limpar JSON quebrado
+    if (
+      text.includes('/""') ||
+      text.includes('""/')
+    ) {
+
+      try {
+
+        let cleaned =
+          text
+            .replaceAll('/""', '"')
+            .replaceAll('""/', '"')
+            .replaceAll('/"', '"')
+            .replaceAll('"/', '"')
+            .replaceAll('١', '');
+
+        const parsed =
+          JSON.parse(cleaned);
+
+        value = parsed;
+
+      } catch {}
+    }
+
+    // array
+    if (
+      Array.isArray(value)
+    ) {
+
+      return (
+
+        <div className="space-y-3">
+
+          {value.map(
+            (item, index) => (
+
+              <div
+                key={index}
+                className="bg-zinc-950 border border-zinc-800 rounded-xl p-3"
+              >
+
+                {typeof item ===
+                "object" ? (
+
+                  Object.entries(item)
+                    .map(
+                      ([k, v]) => (
+
+                        <div
+                          key={k}
+                          className="mb-1"
+                        >
+
+                          <span className="text-zinc-400">
+                            {k}:
+                          </span>{" "}
+
+                          <span>
+                            {String(v)}
+                          </span>
+
+                        </div>
+
+                      )
+                    )
+
+                ) : (
+
+                  <div>
+                    {String(item)}
+                  </div>
+
+                )}
+
+              </div>
+
+            )
+          )}
+
+        </div>
+      );
+    }
+
+    // objeto
+    if (
+      typeof value ===
+      "object"
+    ) {
+
+      return (
+
+        <div className="space-y-2">
+
+          {Object.entries(value)
+            .map(
+              ([k, v]) => (
+
+                <div key={k}>
+
+                  <span className="text-zinc-400">
+                    {k}:
+                  </span>{" "}
+
+                  <span>
+                    {String(v)}
+                  </span>
+
+                </div>
+
+              )
+            )}
+
+        </div>
+      );
+    }
+
+    return (
+      <span>
+        {String(value)}
+      </span>
+    );
+  };
   return (
+
 
     <div className="min-h-screen bg-zinc-950 text-white p-6">
 
@@ -494,11 +637,7 @@ export default function App() {
                           {key}
                         </div>
 
-                        <pre className="break-words whitespace-pre-wrap text-sm text-white">
-                          {formatValue(
-                            value
-                          )}
-                        </pre>
+                        {renderValue(value)}
 
                       </div>
 
