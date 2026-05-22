@@ -262,17 +262,23 @@ console.log(
               <div className="mt-8 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
 
                 {Object.entries(data)
-                  .slice(0, 8)
-                  .map(
-                    ([key, value]) => (
-                      <Card
-                        key={key}
-                        title={key}
-                        value={value}
-                      />
-                    )
-                  )}
-
+  .filter(
+    ([key]) =>
+      key !==
+        "PROPRIETARIOSJSON" &&
+      key !==
+        "OPERADORESJSON"
+  )
+  .slice(0, 8)
+  .map(
+    ([key, value]) => (
+      <Card
+        key={key}
+        title={key}
+        value={value}
+      />
+    )
+  )}
               </div>
 
               <div className="mt-6 flex gap-4">
