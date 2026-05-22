@@ -5,7 +5,6 @@ import React, {
 } from "react";
 
 export default function App() {
-
   const [prefixo, setPrefixo] =
     useState("");
 
@@ -24,179 +23,112 @@ export default function App() {
   const [showJson, setShowJson] =
     useState(false);
 
+  const API_URL =
+    "/api-anac/dadosabertos/Aeronaves/RAB/dados_aeronaves.json";
+
   useEffect(() => {
     carregarBase();
   }, []);
 
-  const carregarBase =
-    async () => {
+  const carregarBase = async () => {
+    try {
+      setLoading(true);
 
-      try {
+      const response = await fetch(
+        API_URL
+      );
 
-        setLoading(true);
-
-        // cache
-        const cache =
-          localStorage.getItem(
-            "anac_db"
-          );
-
-        const cacheTime =
-          localStorage.getItem(
-            "anac_db_time"
-          );
-
-        // 24 horas
-        const limite =
-          1000 *
-          60 *
-          60 *
-          24;
-
-        // usa cache
-        if (
-          cache &&
-          cacheTime
-        ) {
-
-          const agora =
-            Date.now();
-
-          const diff =
-            agora -
-            Number(cacheTime);
-
-          if (
-            diff < limite
-          ) {
-
-            const parsed =
-              JSON.parse(cache);
-
-            setBase(parsed);
-
-            console.log(
-              "Cache carregado"
-            );
-
-            setLoading(false);
-
-            return;
-          }
-        }
-
-        console.log(
-          "Baixando base ANAC..."
+      if (!response.ok) {
+        throw new Error(
+          "Erro ao carregar JSON"
         );
-
-        const response =
-  await fetch(
-    "https://corsproxy.io/?https://sistemas.anac.gov.br/dadosabertos/Aeronaves/RAB/dados_aeronaves.json"
-  );
-        if (!response.ok) {
-
-          throw new Error(
-            "Erro ao baixar base"
-          );
-        }
-
-        const json =
-          await response.json();
-
-        let lista = [];
-
-        if (
-          Array.isArray(json)
-        ) {
-
-          lista = json;
-
-        } else if (
-          Array.isArray(
-            json.data
-          )
-        ) {
-
-          lista = json.data;
-
-        } else {
-
-          throw new Error(
-            "Estrutura inválida"
-          );
-        }
-
-        // indexa por prefixo
-        const mapa = {};
-
-        lista.forEach(
-          (item) => {
-
-            const marca =
-              String(
-                item.MARCA || ""
-              )
-                .replace("-", "")
-                .trim()
-                .toUpperCase();
-
-            if (marca) {
-
-              mapa[marca] =
-                item;
-            }
-          }
-        );
-
-        // salva cache
-        localStorage.setItem(
-          "anac_db",
-          JSON.stringify(mapa)
-        );
-
-        localStorage.setItem(
-          "anac_db_time",
-          Date.now()
-        );
-
-        setBase(mapa);
-
-        console.log(
-          "Base carregada:",
-          Object.keys(mapa)
-            .length
-        );
-
-        setLoading(false);
-
-      } catch (err) {
-
-        console.error(err);
-
-        setErro(
-          err.message
-        );
-
-        setLoading(false);
       }
-    };
+
+      const json =
+        await response.json();
+
+      console.log(
+        "JSON recebido:",
+        json
+      );
+console.log(
+  "Primeiro item completo:",
+  JSON.stringify(
+    Array.isArray(json)
+      ? json[0]
+      : json.data?.[0] ||
+          json.features?.[0],
+    null,
+    2
+  )
+);
+
+      let lista = [];
+
+      if (Array.isArray(json)) {
+        lista = json;
+      } else if (
+        Array.isArray(json.data)
+      ) {
+        lista = json.data;
+      } else if (
+        Array.isArray(
+          json.features
+        )
+      ) {
+        lista = json.features;
+      } else {
+        throw new Error(
+          "Estrutura JSON desconhecida"
+        );
+      }
+
+      const mapa = {};
+
+      lista.forEach((item) => {
+        const marca =
+          item.MARCAS
+            ?.trim()
+            .toUpperCase();
+
+        if (marca) {
+          mapa[marca] = item;
+        }
+      });
+
+      console.log(
+        "Aeronaves carregadas:",
+        Object.keys(mapa).length
+      );
+
+      console.log(
+        "Primeiro item:",
+        lista[0]
+      );
+
+      setBase(mapa);
+
+      setLoading(false);
+
+    } catch (err) {
+      console.error(err);
+
+      setErro(err.message);
+
+      setLoading(false);
+    }
+  };
 
   const consultar = () => {
-
     try {
-
       setErro("");
-
       setData(null);
 
-      const busca =
-        prefixo
-          .replace("-", "")
-          .trim()
-          .toUpperCase();
+      const busca = prefixo
+        .trim()
+        .toUpperCase();
 
       if (!busca) {
-
         throw new Error(
           "Digite um prefixo"
         );
@@ -206,7 +138,6 @@ export default function App() {
         base[busca];
 
       if (!aeronave) {
-
         throw new Error(
           "Aeronave não encontrada"
         );
@@ -215,73 +146,50 @@ export default function App() {
       setData(aeronave);
 
     } catch (err) {
-
-      setErro(
-        err.message
-      );
+      setErro(err.message);
     }
   };
 
-  const normalizePrefix =
-    (value) => {
+  const normalizePrefix = (
+    value
+  ) => {
+    let clean = value
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, "");
 
-      let clean =
-        value
-          .toUpperCase()
-          .replace(
-            /[^A-Z0-9]/g,
-            ""
-          );
+    if (clean.length > 2) {
+      clean =
+        clean.slice(0, 2) +
+        "-" +
+        clean.slice(2);
+    }
 
-      if (
-        clean.length > 2
-      ) {
+    return clean.slice(0, 6);
+  };
 
-        clean =
-          clean.slice(0, 2) +
-          "-" +
-          clean.slice(2);
-      }
+  const filledFields = useMemo(() => {
+    if (!data) return 0;
 
-      return clean.slice(0, 6);
-    };
-
-  const filledFields =
-    useMemo(() => {
-
-      if (!data)
-        return 0;
-
-      return Object.values(
-        data
-      ).filter(
+    return Object.values(data)
+      .filter(
         (v) =>
           v !== null &&
           v !== undefined &&
           v !== ""
-      ).length;
+      )
+      .length;
+  }, [data]);
 
-    }, [data]);
+  const copyJson = async () => {
+    await navigator.clipboard.writeText(
+      JSON.stringify(data, null, 2)
+    );
 
-  const copyJson =
-    async () => {
-
-      await navigator.clipboard.writeText(
-        JSON.stringify(
-          data,
-          null,
-          2
-        )
-      );
-
-      alert(
-        "JSON copiado"
-      );
-    };
+    alert("JSON copiado");
+  };
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white p-6">
-
       <div className="max-w-7xl mx-auto">
 
         <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
@@ -289,7 +197,6 @@ export default function App() {
           <div className="flex flex-col lg:flex-row justify-between items-center gap-4">
 
             <div>
-
               <h1 className="text-3xl font-bold">
                 Consulta RAB
               </h1>
@@ -299,15 +206,11 @@ export default function App() {
               </p>
 
               <div className="mt-2 text-sm">
-
                 {loading ? (
-
                   <span className="text-yellow-400">
                     Carregando base...
                   </span>
-
                 ) : (
-
                   <span className="text-green-400">
                     Base carregada (
                     {
@@ -316,18 +219,15 @@ export default function App() {
                     }{" "}
                     aeronaves)
                   </span>
-
                 )}
-
               </div>
-
             </div>
 
             <div className="flex gap-3">
 
               <input
                 type="text"
-                placeholder="PP-ABC"
+                placeholder="PT-JTV"
                 value={prefixo}
                 onChange={(e) =>
                   setPrefixo(
@@ -352,38 +252,32 @@ export default function App() {
           </div>
 
           {erro && (
-
             <div className="mt-6 bg-red-500/10 border border-red-500/30 text-red-300 px-4 py-3 rounded-xl">
               {erro}
             </div>
-
           )}
 
           {data && (
             <>
-
               <div className="mt-8 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
 
                 {Object.entries(data)
                   .slice(0, 8)
                   .map(
                     ([key, value]) => (
-
                       <Card
                         key={key}
                         title={key}
                         value={value}
                       />
-
                     )
                   )}
 
               </div>
 
-              <div className="mt-6 flex gap-4 flex-wrap">
+              <div className="mt-6 flex gap-4">
 
                 <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
-
                   <div className="text-zinc-400 text-sm">
                     Campos preenchidos
                   </div>
@@ -391,7 +285,6 @@ export default function App() {
                   <div className="text-4xl font-bold mt-2">
                     {filledFields}
                   </div>
-
                 </div>
 
                 <button
@@ -426,26 +319,20 @@ export default function App() {
 
                   {Object.entries(data).map(
                     ([key, value]) => (
-
                       <div
                         key={key}
                         className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4"
                       >
-
                         <div className="text-zinc-400 text-sm mb-2">
                           {key}
                         </div>
 
-                        <div className="break-words text-sm">
-
+                        <div className="break-words">
                           {String(
                             value
                           ) || "Não informado"}
-
                         </div>
-
                       </div>
-
                     )
                   )}
 
@@ -454,7 +341,6 @@ export default function App() {
               </div>
 
               {showJson && (
-
                 <div className="mt-8">
 
                   <pre className="bg-black border border-zinc-800 rounded-2xl p-6 overflow-auto text-green-400 text-sm">
@@ -466,16 +352,13 @@ export default function App() {
                   </pre>
 
                 </div>
-
               )}
 
             </>
           )}
 
         </div>
-
       </div>
-
     </div>
   );
 }
@@ -484,9 +367,7 @@ function Card({
   title,
   value,
 }) {
-
   return (
-
     <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
 
       <div className="text-sm text-zinc-400">
@@ -494,10 +375,8 @@ function Card({
       </div>
 
       <div className="mt-2 text-lg font-semibold break-words">
-
         {String(value) ||
           "Não informado"}
-
       </div>
 
     </div>
