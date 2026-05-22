@@ -243,32 +243,87 @@ export default function App() {
     };
 
   const formatValue =
-    (value) => {
+  (value) => {
 
-      if (
-        value === null ||
-        value === undefined ||
-        value === ""
-      ) {
+    if (
+      value === null ||
+      value === undefined ||
+      value === ""
+    ) {
 
-        return "Não informado";
-      }
+      return "Não informado";
+    }
 
-      if (
-        typeof value ===
-        "object"
-      ) {
+    // objeto normal
+    if (
+      typeof value ===
+      "object"
+    ) {
+
+      return JSON.stringify(
+        value,
+        null,
+        2
+      );
+    }
+
+    let text =
+      String(value);
+
+    // limpa JSON quebrado da ANAC
+    if (
+      text.includes(
+        '/""'
+      ) ||
+      text.includes(
+        '""/'
+      )
+    ) {
+
+      try {
+
+        let cleaned =
+          text
+            .replaceAll(
+              '/""',
+              '"'
+            )
+            .replaceAll(
+              '""/',
+              '"'
+            )
+            .replaceAll(
+              '/"',
+              '"'
+            )
+            .replaceAll(
+              '"/',
+              '"'
+            )
+            .replaceAll(
+              '١',
+              ''
+            );
+
+        const parsed =
+          JSON.parse(
+            cleaned
+          );
 
         return JSON.stringify(
-          value,
+          parsed,
           null,
           2
         );
+
+      } catch {
+
+        return text;
       }
+    }
 
-      return String(value);
-    };
-
+    return text;
+  };
   return (
 
     <div className="min-h-screen bg-zinc-950 text-white p-6">
