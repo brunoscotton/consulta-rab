@@ -625,24 +625,32 @@ const renderValue =
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-                  {Object.entries(data).map(
-                    ([key, value]) => (
+{Object.entries(data)
+  .filter(
+    ([key]) =>
+      key !==
+        "PROPRIETARIOSJSON" &&
+      key !==
+        "OPERADORESJSON"
+  )
+  .map(
+    ([key, value]) => (
 
-                      <div
-                        key={key}
-                        className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4"
-                      >
+      <div
+        key={key}
+        className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4"
+      >
 
-                        <div className="text-zinc-400 text-sm mb-2">
-                          {key}
-                        </div>
+        <div className="text-zinc-400 text-sm mb-2">
+          {key}
+        </div>
 
-                        {renderValue(value)}
+        {renderValue(value)}
 
-                      </div>
+      </div>
 
-                    )
-                  )}
+    )
+  )}
 
                 </div>
 
